@@ -55,12 +55,12 @@ function updateScoreBoard() {
 function updateRanking(nickname, score) {
   let ranking = JSON.parse(localStorage.getItem('snakeRanking') || '[]');
   // 중복 방지: 닉네임+점수 조합이 이미 있으면 추가하지 않음
-  if (!ranking.some(r => r.nickname === nickname && r.score === score)) {
-    ranking.push({ nickname, score });
-    ranking.sort((a, b) => b.score - a.score);
-    ranking = ranking.slice(0, 10);
-    localStorage.setItem('snakeRanking', JSON.stringify(ranking));
-  }
+  // 그리고, 항상 10개만 유지
+  ranking = ranking.filter(r => !(r.nickname === nickname && r.score === score));
+  ranking.push({ nickname, score });
+  ranking.sort((a, b) => b.score - a.score);
+  ranking = ranking.slice(0, 10);
+  localStorage.setItem('snakeRanking', JSON.stringify(ranking));
   renderRanking();
 }
 
@@ -69,6 +69,14 @@ function renderRanking() {
   const list = document.getElementById('ranking-list');
   if (!list) return;
   while (list.firstChild) list.removeChild(list.firstChild); // 완전 초기화
+  // 닉네임+점수 조합이 중복되는 항목 제거(최상위만 남김)
+  const seen = new Set();
+  ranking = ranking.filter(item => {
+    const key = item.nickname + ":" + item.score;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   ranking.forEach((item, i) => {
     const li = document.createElement('li');
     li.textContent = `${i + 1}. ${item.nickname} - ${item.score}점`;

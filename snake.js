@@ -4,7 +4,11 @@ const grid = 20;
 let count = 0;
 const fruits = ["🍎", "🍌", "🍇", "🍓", "🍊", "🍉", "🍍", "🥝", "🥥"];
 const bodyCircles = ["🔴", "🟠", "🟡", "🟢", "🔵", "🟣"];
-let snake, apple, gameOver, score, highScore = 0, scoreHistory = [];
+let snake, apple, gameOver, score, highScore = 0;
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
 
 function resetGame() {
   snake = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
@@ -13,14 +17,29 @@ function resetGame() {
   score = 0;
 }
 
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min)) + min;
-}
-
 function spawnFruit() {
   apple.x = getRandomInt(0, 20) * grid;
   apple.y = getRandomInt(0, 20) * grid;
   apple.emoji = fruits[Math.floor(Math.random() * fruits.length)];
+}
+
+function drawGrid() {
+  ctx.save();
+  ctx.strokeStyle = "#fff2";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= canvas.width; x += grid) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= canvas.height; y += grid) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawScore() {
@@ -29,10 +48,27 @@ function drawScore() {
   ctx.textAlign = "left";
   ctx.fillText(`점수: ${score}`, 10, 25);
   ctx.fillText(`최고점수: ${highScore}`, 10, 50);
-  if (scoreHistory.length > 0) {
-    ctx.font = "12px Arial";
-    ctx.fillText(`이전 점수: ${scoreHistory.slice(-5).join(', ')}`, 10, 70);
-  }
+}
+
+function updateRanking(nickname, score) {
+  let ranking = JSON.parse(localStorage.getItem('snakeRanking') || '[]');
+  ranking.push({ nickname, score });
+  ranking.sort((a, b) => b.score - a.score);
+  ranking = ranking.slice(0, 10);
+  localStorage.setItem('snakeRanking', JSON.stringify(ranking));
+  renderRanking();
+}
+
+function renderRanking() {
+  let ranking = JSON.parse(localStorage.getItem('snakeRanking') || '[]');
+  const list = document.getElementById('ranking-list');
+  if (!list) return;
+  list.innerHTML = '';
+  ranking.forEach((item, i) => {
+    const li = document.createElement('li');
+    li.textContent = `${i + 1}. ${item.nickname} - ${item.score}점`;
+    list.appendChild(li);
+  });
 }
 
 function gameLoop() {
@@ -41,6 +77,7 @@ function gameLoop() {
   count = 0;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  drawGrid();
   drawScore();
 
   if (gameOver) {
@@ -69,9 +106,9 @@ function gameLoop() {
   ctx.fillText(apple.emoji, apple.x + grid/2, apple.y + grid/2);
   snake.cells.forEach((cell, index) => {
     if (index === 0) {
-      ctx.fillText("🥹", cell.x + grid/2, cell.y + grid/2); // 머리
+      ctx.fillText("🥹", cell.x + grid/2, cell.y + grid/2);
     } else {
-      ctx.fillText(bodyCircles[(index-1) % bodyCircles.length], cell.x + grid/2, cell.y + grid/2); // 몸통
+      ctx.fillText(bodyCircles[(index-1) % bodyCircles.length], cell.x + grid/2, cell.y + grid/2);
     }
     if (cell.x === apple.x && cell.y === apple.y) {
       snake.maxCells++;
@@ -82,7 +119,12 @@ function gameLoop() {
     for (let i = index + 1; i < snake.cells.length; i++) {
       if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
         gameOver = true;
-        scoreHistory.push(score);
+        setTimeout(() => {
+          let nickname = prompt('게임 오버! 닉네임을 입력하세요 (최대 8자):', '익명');
+          if (!nickname) nickname = '익명';
+          nickname = nickname.slice(0, 8);
+          updateRanking(nickname, score);
+        }, 100);
       }
     }
   });
@@ -103,4 +145,5 @@ document.addEventListener('keydown', function(e) {
   }
 });
 resetGame();
+renderRanking();
 requestAnimationFrame(gameLoop);

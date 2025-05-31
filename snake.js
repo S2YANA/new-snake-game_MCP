@@ -5,6 +5,7 @@ let count = 0;
 const fruits = ["🍎", "🍌", "🍇", "🍓", "🍊", "🍉", "🍍", "🥝", "🥥"];
 const bodyCircles = ["🔴", "🟠", "🟡", "🟢", "🔵", "🟣"];
 let snake, apple, gameOver, score, highScore = 0;
+let rankingUpdated = false;
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
@@ -15,6 +16,8 @@ function resetGame() {
   apple = { x: 320, y: 320, emoji: fruits[Math.floor(Math.random() * fruits.length)] };
   gameOver = false;
   score = 0;
+  rankingUpdated = false;
+  updateScoreBoard();
 }
 
 function spawnFruit() {
@@ -42,12 +45,11 @@ function drawGrid() {
   ctx.restore();
 }
 
-function drawScore() {
-  ctx.font = "bold 18px Arial";
-  ctx.fillStyle = "#fff";
-  ctx.textAlign = "left";
-  ctx.fillText(`점수: ${score}`, 10, 25);
-  ctx.fillText(`최고점수: ${highScore}`, 10, 50);
+function updateScoreBoard() {
+  const scoreEl = document.getElementById('score');
+  const highScoreEl = document.getElementById('high-score');
+  if (scoreEl) scoreEl.textContent = `점수: ${score}`;
+  if (highScoreEl) highScoreEl.textContent = `최고점수: ${highScore}`;
 }
 
 function updateRanking(nickname, score) {
@@ -76,9 +78,7 @@ function gameLoop() {
   if (++count < 4) return;
   count = 0;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   drawGrid();
-  drawScore();
 
   if (gameOver) {
     ctx.font = "bold 36px Arial";
@@ -89,6 +89,15 @@ function gameLoop() {
     ctx.font = "20px Arial";
     ctx.fillText(`최종 점수: ${score}`, canvas.width/2, canvas.height/2 + 10);
     ctx.fillText("스페이스바를 눌러 재시작", canvas.width/2, canvas.height/2 + 40);
+    if (!rankingUpdated) {
+      rankingUpdated = true;
+      setTimeout(() => {
+        let nickname = prompt('게임 오버! 닉네임을 입력하세요 (최대 8자):', '익명');
+        if (!nickname) nickname = '익명';
+        nickname = nickname.slice(0, 8);
+        updateRanking(nickname, score);
+      }, 100);
+    }
     return;
   }
 
@@ -114,17 +123,12 @@ function gameLoop() {
       snake.maxCells++;
       score++;
       if (score > highScore) highScore = score;
+      updateScoreBoard();
       spawnFruit();
     }
     for (let i = index + 1; i < snake.cells.length; i++) {
       if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
         gameOver = true;
-        setTimeout(() => {
-          let nickname = prompt('게임 오버! 닉네임을 입력하세요 (최대 8자):', '익명');
-          if (!nickname) nickname = '익명';
-          nickname = nickname.slice(0, 8);
-          updateRanking(nickname, score);
-        }, 100);
       }
     }
   });

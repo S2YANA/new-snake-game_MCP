@@ -3,13 +3,14 @@ const ctx = canvas.getContext('2d');
 const grid = 20;
 let count = 0;
 const fruits = ["🍎", "🍌", "🍇", "🍓", "🍊", "🍉", "🍍", "🥝", "🥥"];
-const bodyBlocks = ["🟩", "🟪", "🟦", "🟧", "🟫"];
-let snake, apple, gameOver;
+const bodyCircles = ["🔴", "🟠", "🟡", "🟢", "🔵", "🟣"];
+let snake, apple, gameOver, score, highScore = 0, scoreHistory = [];
 
 function resetGame() {
   snake = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
   apple = { x: 320, y: 320, emoji: fruits[Math.floor(Math.random() * fruits.length)] };
   gameOver = false;
+  score = 0;
 }
 
 function getRandomInt(min, max) {
@@ -22,11 +23,25 @@ function spawnFruit() {
   apple.emoji = fruits[Math.floor(Math.random() * fruits.length)];
 }
 
+function drawScore() {
+  ctx.font = "bold 18px Arial";
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "left";
+  ctx.fillText(`점수: ${score}`, 10, 25);
+  ctx.fillText(`최고점수: ${highScore}`, 10, 50);
+  if (scoreHistory.length > 0) {
+    ctx.font = "12px Arial";
+    ctx.fillText(`이전 점수: ${scoreHistory.slice(-5).join(', ')}`, 10, 70);
+  }
+}
+
 function gameLoop() {
   requestAnimationFrame(gameLoop);
   if (++count < 4) return;
   count = 0;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawScore();
 
   if (gameOver) {
     ctx.font = "bold 36px Arial";
@@ -35,7 +50,8 @@ function gameLoop() {
     ctx.textBaseline = "middle";
     ctx.fillText("GAME OVER", canvas.width/2, canvas.height/2 - 20);
     ctx.font = "20px Arial";
-    ctx.fillText("스페이스바를 눌러 재시작", canvas.width/2, canvas.height/2 + 20);
+    ctx.fillText(`최종 점수: ${score}`, canvas.width/2, canvas.height/2 + 10);
+    ctx.fillText("스페이스바를 눌러 재시작", canvas.width/2, canvas.height/2 + 40);
     return;
   }
 
@@ -55,15 +71,18 @@ function gameLoop() {
     if (index === 0) {
       ctx.fillText("🥹", cell.x + grid/2, cell.y + grid/2); // 머리
     } else {
-      ctx.fillText(bodyBlocks[(index-1) % bodyBlocks.length], cell.x + grid/2, cell.y + grid/2); // 몸통
+      ctx.fillText(bodyCircles[(index-1) % bodyCircles.length], cell.x + grid/2, cell.y + grid/2); // 몸통
     }
     if (cell.x === apple.x && cell.y === apple.y) {
       snake.maxCells++;
+      score++;
+      if (score > highScore) highScore = score;
       spawnFruit();
     }
     for (let i = index + 1; i < snake.cells.length; i++) {
       if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
         gameOver = true;
+        scoreHistory.push(score);
       }
     }
   });

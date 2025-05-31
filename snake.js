@@ -2,8 +2,8 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const grid = 20;
 let count = 0;
-let speed = 8; // 낮을수록 빠름
-const minSpeed = 2; // 최대 난이도(최고속도)
+let speed = 12; // 더 천천히 시작
+const minSpeed = 4; // 너무 빨라지지 않도록 최저값 완화
 const fruits = ["🍎", "🍌", "🍇", "🍓", "🍊", "🍉", "🍍", "🥝", "🥥"];
 const bodyCircles = ["🔴", "🟠", "🟡", "🟢", "🔵", "🟣"];
 let snake, apple, gameOver, score, highScore = 0;
@@ -18,7 +18,7 @@ function resetGame() {
   apple = { x: 320, y: 320, emoji: fruits[Math.floor(Math.random() * fruits.length)] };
   gameOver = false;
   score = 0;
-  speed = 8; // 초기 속도
+  speed = 12; // 더 천천히 시작
   rankingUpdated = false;
   updateScoreBoard();
 }

@@ -2,6 +2,8 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const grid = 20;
 let count = 0;
+let speed = 8; // 낮을수록 빠름
+const minSpeed = 2; // 최대 난이도(최고속도)
 const fruits = ["🍎", "🍌", "🍇", "🍓", "🍊", "🍉", "🍍", "🥝", "🥥"];
 const bodyCircles = ["🔴", "🟠", "🟡", "🟢", "🔵", "🟣"];
 let snake, apple, gameOver, score, highScore = 0;
@@ -16,6 +18,7 @@ function resetGame() {
   apple = { x: 320, y: 320, emoji: fruits[Math.floor(Math.random() * fruits.length)] };
   gameOver = false;
   score = 0;
+  speed = 8; // 초기 속도
   rankingUpdated = false;
   updateScoreBoard();
 }
@@ -86,7 +89,7 @@ function renderRanking() {
 
 function gameLoop() {
   requestAnimationFrame(gameLoop);
-  if (++count < 4) return;
+  if (++count < speed) return;
   count = 0;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawGrid();
@@ -136,6 +139,8 @@ function gameLoop() {
       if (score > highScore) highScore = score;
       updateScoreBoard();
       spawnFruit();
+      // 과일 먹을 때마다 속도 증가(최대치 제한)
+      if (speed > minSpeed) speed--;
     }
     for (let i = index + 1; i < snake.cells.length; i++) {
       if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {

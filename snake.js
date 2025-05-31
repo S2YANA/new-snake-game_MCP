@@ -54,8 +54,6 @@ function updateScoreBoard() {
 
 function updateRanking(nickname, score) {
   let ranking = JSON.parse(localStorage.getItem('snakeRanking') || '[]');
-  // 중복 방지: 닉네임+점수 조합이 이미 있으면 추가하지 않음
-  // 그리고, 항상 10개만 유지
   ranking = ranking.filter(r => !(r.nickname === nickname && r.score === score));
   ranking.push({ nickname, score });
   ranking.sort((a, b) => b.score - a.score);
@@ -79,9 +77,9 @@ function renderRanking() {
   const list = document.getElementById('ranking-list');
   if (!list) return;
   list.innerHTML = '';
-  ranking.forEach((item, i) => {
+  ranking.forEach((item) => {
     const li = document.createElement('li');
-    li.textContent = `${i + 1}. ${item.nickname} - ${item.score}점`;
+    li.textContent = `${item.nickname} - ${item.score}점`;
     list.appendChild(li);
   });
 }

@@ -59,7 +59,17 @@ function updateRanking(nickname, score) {
   ranking = ranking.filter(r => !(r.nickname === nickname && r.score === score));
   ranking.push({ nickname, score });
   ranking.sort((a, b) => b.score - a.score);
-  ranking = ranking.slice(0, 10);
+  // 닉네임+점수 조합이 중복되는 항목 제거(최상위만 남김)
+  const seen = new Set();
+  const filtered = [];
+  for (const item of ranking) {
+    const key = item.nickname + ':' + item.score;
+    if (!seen.has(key)) {
+      seen.add(key);
+      filtered.push(item);
+    }
+  }
+  ranking = filtered.slice(0, 10);
   localStorage.setItem('snakeRanking', JSON.stringify(ranking));
   renderRanking();
 }
@@ -68,15 +78,7 @@ function renderRanking() {
   let ranking = JSON.parse(localStorage.getItem('snakeRanking') || '[]');
   const list = document.getElementById('ranking-list');
   if (!list) return;
-  while (list.firstChild) list.removeChild(list.firstChild); // 완전 초기화
-  // 닉네임+점수 조합이 중복되는 항목 제거(최상위만 남김)
-  const seen = new Set();
-  ranking = ranking.filter(item => {
-    const key = item.nickname + ":" + item.score;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  list.innerHTML = '';
   ranking.forEach((item, i) => {
     const li = document.createElement('li');
     li.textContent = `${i + 1}. ${item.nickname} - ${item.score}점`;

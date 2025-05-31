@@ -2,11 +2,19 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const grid = 20;
 let count = 0;
+const fruits = ["🍎", "🍌", "🍇", "🍓", "🍊", "🍉", "🍍", "🥝", "🥥"];
+const bodyBlocks = ["🟩", "🟪", "🟦", "🟧", "🟫"];
 let snake = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
-let apple = { x: 320, y: 320 };
+let apple = { x: 320, y: 320, emoji: fruits[Math.floor(Math.random() * fruits.length)] };
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function spawnFruit() {
+  apple.x = getRandomInt(0, 20) * grid;
+  apple.y = getRandomInt(0, 20) * grid;
+  apple.emoji = fruits[Math.floor(Math.random() * fruits.length)];
 }
 
 function gameLoop() {
@@ -22,15 +30,19 @@ function gameLoop() {
   else if (snake.y >= canvas.height) snake.y = 0;
   snake.cells.unshift({ x: snake.x, y: snake.y });
   if (snake.cells.length > snake.maxCells) snake.cells.pop();
-  ctx.fillStyle = 'red';
-  ctx.fillRect(apple.x, apple.y, grid-1, grid-1);
-  ctx.fillStyle = '#FFB2F5';
+  ctx.font = "20px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(apple.emoji, apple.x + grid/2, apple.y + grid/2);
   snake.cells.forEach((cell, index) => {
-    ctx.fillRect(cell.x, cell.y, grid-1, grid-1);
+    if (index === 0) {
+      ctx.fillText("🥹", cell.x + grid/2, cell.y + grid/2); // 머리
+    } else {
+      ctx.fillText(bodyBlocks[(index-1) % bodyBlocks.length], cell.x + grid/2, cell.y + grid/2); // 몸통
+    }
     if (cell.x === apple.x && cell.y === apple.y) {
       snake.maxCells++;
-      apple.x = getRandomInt(0, 20) * grid;
-      apple.y = getRandomInt(0, 20) * grid;
+      spawnFruit();
     }
     for (let i = index + 1; i < snake.cells.length; i++) {
       if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
@@ -40,8 +52,7 @@ function gameLoop() {
         snake.maxCells = 4;
         snake.dx = grid;
         snake.dy = 0;
-        apple.x = getRandomInt(0, 20) * grid;
-        apple.y = getRandomInt(0, 20) * grid;
+        spawnFruit();
       }
     }
   });
